@@ -3,42 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>正在消失的世界文化遺產</title>
+    <title>瀕危世界文化遺產巡禮 - 簡報錄影版</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
     <style>
-        body { margin: 0; background-color: #121212; color: #ececec; font-family: sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        #info-panel { position: absolute; top: 20px; left: 20px; max-width: 300px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 20px; border-left: 5px solid #e74c3c; border-radius: 8px; pointer-events: none; }
+        /* 1. 這裡修改網頁底色 */
+        body { 
+            margin: 0; 
+            background-color: #000000; /* 修改為純黑 */
+            color: #ececec; 
+            font-family: sans-serif; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
+        #info-panel { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            max-width: 300px; 
+            z-index: 10; 
+            background: rgba(0, 0, 0, 0.7); /* 資訊面板半透明背景 */
+            padding: 20px; 
+            border-left: 5px solid #e74c3c; 
+            border-radius: 8px; 
+            pointer-events: none; 
+        }
         h1 { margin: 0 0 10px 0; font-size: 20px; color: #e74c3c; }
-        .location-name { font-size: 18px; font-weight: bold; color: #fff; }
+        .location-name { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 4px; }
         .country { font-size: 14px; color: #f1c40f; margin-bottom: 10px; }
-        .reason { font-size: 13px; line-height: 1.5; color: #ccc; }
+        .reason { font-size: 13px; line-height: 1.6; color: #ccc; text-align: justify; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
+
     <div id="info-panel">
         <h1>瀕危遺址巡禮</h1>
         <div id="site-info">
             <div class="location-name">載入中...</div>
             <div class="country"></div>
-            <div class="reason">正在繪製全球地圖...</div>
+            <div class="reason">正在繪製數據...</div>
         </div>
     </div>
+
     <canvas id="globe"></canvas>
 
 <script>
-    // 直接將數據放在這裡，不再讀取外部檔案
     const locations = [
         { name: "敖德薩歷史中心", country: "烏克蘭", lat: 46.4825, lon: 30.7233, reason: "武裝衝突：因戰爭持續遭受飛彈威脅。" },
         { name: "阿勒頗古城", country: "敘利亞", lat: 36.1992, lon: 37.1639, reason: "戰爭與動盪：長期內戰導致古市集慘遭毀滅性破壞。" },
         { name: "巴米揚峽谷考古遺址", country: "阿富汗", lat: 34.8217, lon: 67.8192, reason: "人為破壞：曾遭塔利班炸毀大佛，現面臨管理缺失。" },
         { name: "維也納歷史中心", country: "奧地利", lat: 48.2082, lon: 16.3738, reason: "城市過度開發：現代高樓建築計畫破壞了古城天際線。" },
-        { name: "昌昌城考古地區", country: "秘魯", lat: -8.1100, lon: -79.0733, reason: "氣候變遷：聖嬰現象強降雨正迅速侵蝕土製城市。" },
+        { name: "昌昌城考古地區", country: "秘魯", lat: -8.11, lon: -79.0733, reason: "氣候變遷：聖嬰現象強降雨正迅速侵蝕土製城市。" },
         { name: "廷巴克圖古城", country: "馬利", lat: 16.7666, lon: -3.0026, reason: "武裝衝突與沙漠化：面臨撒哈拉沙漠吞噬。" },
         { name: "科羅及其港口", country: "委內瑞拉", lat: 11.4111, lon: -69.6739, reason: "自然侵蝕：獨特的土坏建築受極端氣候影響且缺乏資金。" },
         { name: "賈姆尖塔", country: "阿富汗", lat: 34.3964, lon: 64.5161, reason: "地理災害：位於河谷地帶，長年受洪水侵蝕及地震威脅。" },
-        { name: "查比德歷史古城", country: "葉門", lat: 14.1956, lon: 43.3150, reason: "戰爭與貧困：受葉門內戰波及，傳統建築逐漸頹圮。" },
-        { name: "巴提爾文化景觀", country: "巴勒斯坦", lat: 31.7225, lon: 35.1400, reason: "地緣政治：因開發威脅其千年灌溉梯田景觀。" }
+        { name: "查比德歷史古城", country: "葉門", lat: 14.1956, lon: 43.315, reason: "戰爭與貧困：受葉門內戰波及，傳統建築逐漸頹圮。" },
+        { name: "巴提爾文化景觀", country: "巴勒斯坦", lat: 31.7225, lon: 35.14, reason: "地緣政治：因開發威脅其千年灌溉梯田景觀。" }
     ];
 
     const width = window.innerWidth, height = window.innerHeight;
@@ -60,7 +84,7 @@
             d3.transition().duration(2500).tween("rotate", () => {
                 const r = d3.interpolate(projection.rotate(), [-d.lon, -d.lat]);
                 return t => { projection.rotate(r(t)); render(); };
-            }).transition().duration(3000).on("end", () => {
+            }).transition().duration(3500).on("end", () => {
                 currentIndex = (currentIndex + 1) % locations.length;
                 transition();
             });
@@ -68,8 +92,19 @@
 
         function render() {
             context.clearRect(0, 0, width, height);
-            context.beginPath(); path({type: "Sphere"}); context.fillStyle = "#1e272e"; context.fill();
-            context.beginPath(); path(land); context.fillStyle = "#485460"; context.fill();
+
+            // 2. 這裡修改地球海洋的顏色
+            context.beginPath();
+            path({type: "Sphere"});
+            context.fillStyle = "#0a0a0a"; // 修改為極深灰色，模擬星空
+            context.fill();
+
+            // 3. 這裡修改陸地的顏色
+            context.beginPath();
+            path(land);
+            context.fillStyle = "#34495e"; // 修改為灰藍色
+            context.fill();
+
             locations.forEach((loc, i) => {
                 const p = projection([loc.lon, loc.lat]);
                 if (p) {
@@ -77,6 +112,10 @@
                     context.arc(p[0], p[1], i === currentIndex ? 6 : 3, 0, 2 * Math.PI);
                     context.fillStyle = i === currentIndex ? "#e74c3c" : "#f1c40f";
                     context.fill();
+                    if (i === currentIndex) {
+                        context.strokeStyle = "#fff";
+                        context.stroke();
+                    }
                 }
             });
         }
