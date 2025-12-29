@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Tour</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__content">
+      <p class="eyebrow">World Tour</p>
+      <h1>Discover the planet one city at a time</h1>
+      <p class="lede">Follow our curated itinerary packed with culture, cuisine, and hidden gems on every continent.</p>
+      <div class="hero__actions">
+        <a class="button" href="#itinerary">View itinerary</a>
+        <a class="button button--ghost" href="#faq">FAQ</a>
+      </div>
+    </div>
+    <div class="hero__stat">
+      <div class="stat-card">
+        <p class="stat-card__value">18</p>
+        <p class="stat-card__label">cities in 60 days</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card__value">4</p>
+        <p class="stat-card__label">continents</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="itinerary" class="section">
+      <div class="section__header">
+        <div>
+          <p class="eyebrow">Itinerary</p>
+          <h2>Highlights on the route</h2>
+          <p class="lede">A balanced mix of vibrant cities, coastal escapes, and mountain retreats.</p>
+        </div>
+        <div class="tags">
+          <span class="tag">Culture</span>
+          <span class="tag">Food</span>
+          <span class="tag">Nature</span>
+        </div>
+      </div>
+      <div class="cards" id="city-grid"></div>
+    </section>
+
+    <section class="section section--muted">
+      <div class="cta">
+        <div>
+          <p class="eyebrow">Logistics</p>
+          <h2>Ready for takeoff</h2>
+          <p class="lede">We handle flights, hotels, and on-the-ground guides so you can enjoy every stop.</p>
+        </div>
+        <a class="button" href="#faq">See details</a>
+      </div>
+    </section>
+
+    <section id="faq" class="section">
+      <div class="section__header">
+        <div>
+          <p class="eyebrow">FAQ</p>
+          <h2>What travelers ask us</h2>
+          <p class="lede">Everything you need to know before booking.</p>
+        </div>
+      </div>
+      <div class="faq" id="faq-list"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built for GitHub Pages · Updated automatically from this repository.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
