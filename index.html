@@ -1,14 +1,157 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<title>World tour</title>
-<link rel="stylesheet" type="text/css" href="./inspector.css">
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在消失的世界文化遺產 - 全球巡迴導覽</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <style>
+        body { 
+            margin: 0; 
+            background-color: #121212; 
+            color: #ececec; 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
+        #info-panel { 
+            position: absolute; 
+            top: 30px; 
+            left: 30px; 
+            max-width: 350px; 
+            z-index: 10; 
+            background: rgba(20, 20, 20, 0.85); 
+            padding: 25px; 
+            border-left: 5px solid #e74c3c; 
+            border-radius: 8px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            pointer-events: none; /* 防止遮擋鼠標點擊 */
+        }
+        h1 { margin: 0 0 10px 0; font-size: 22px; color: #e74c3c; letter-spacing: 1px; }
+        .location-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        .country { font-size: 15px; color: #f1c40f; margin-bottom: 15px; font-weight: 500; }
+        .reason { font-size: 14px; line-height: 1.6; color: #d1d1d1; text-align: justify; }
+        canvas { display: block; }
+    </style>
+</head>
 <body>
-<script type="module">
 
-import define from "./index.js";
-import {Runtime, Library, Inspector} from "./runtime.js";
+    <div id="info-panel">
+        <h1>瀕危遺址巡禮</h1>
+        <div id="site-info">
+            <div class="location-name">準備中...</div>
+            <div class="country"></div>
+            <div class="reason">正在載入全球遺址數據...</div>
+        </div>
+    </div>
 
-const runtime = new Runtime();
-const main = runtime.module(define, Inspector.into(document.body));
+    <canvas id="globe"></canvas>
 
-</script>
+<script>
+    // 配置參數
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const canvas = d3.select("#globe").attr("width", width).attr("height", height);
+    const context = canvas.node().getContext("2d");
+
+    // 設定投影（球體正投影）
+    const projection = d3.geoOrthographic()
+        .scale(Math.min(width, height) / 2.3)
+        .translate([width / 2, height / 2])
+        .precision(0.1);
+
+    const path = d3.geoPath(projection, context);
+
+    // 同時載入世界地圖與自訂 JSON 數據
+    Promise.all([
+        d3.json("https://unpkg.com/world-atlas@2/countries-110m.json"), // 載入地形數據
+        d3.json("locations.json") // 載入你的遺址數據
+    ]).then(([world, locations]) => {
+        
+        const land = topojson.feature(world, world.objects.land);
+        let currentIndex = 0;
+
+        // 更新左上角文字資訊
+        function updateInfo(index) {
+            const d = locations[index];
+            d3.select(".location-name").text(d.name);
+            d3.select(".country").text(d.country);
+            d3.select(".reason").text(d.reason);
+        }
+
+        // 循環動畫邏輯
+        function transition() {
+            const targetPoint = [locations[currentIndex].lon, locations[currentIndex].lat];
+            updateInfo(currentIndex);
+
+            d3.transition()
+                .duration(2500) // 旋轉時間 2.5 秒
+                .tween("rotate", () => {
+                    const r = d3.interpolate(projection.rotate(), [-targetPoint[0], -targetPoint[1]]);
+                    return t => {
+                        projection.rotate(r(t));
+                        render();
+                    };
+                })
+                .transition()
+                .duration(3500) // 在目標點停留 3.5 秒
+                .on("end", () => {
+                    currentIndex = (currentIndex + 1) % locations.length;
+                    transition();
+                });
+        }
+
+        // 繪製每一幀
+        function render() {
+            context.clearRect(0, 0, width, height);
+
+            // 1. 畫背景球體（深藍黑色）
+            context.beginPath();
+            path({type: "Sphere"});
+            context.fillStyle = "#1e272e";
+            context.fill();
+
+            // 2. 畫陸地（灰藍色）
+            context.beginPath();
+            path(land);
+            context.fillStyle = "#485460";
+            context.fill();
+
+            // 3. 畫經緯線（極淡白色）
+            context.beginPath();
+            path(d3.geoGraticule()());
+            context.strokeStyle = "rgba(255,255,255,0.05)";
+            context.stroke();
+
+            // 4. 畫遺址標註點
+            locations.forEach((loc, i) => {
+                const coords = projection([loc.lon, loc.lat]);
+                if (coords) {
+                    context.beginPath();
+                    // 當前遺址點較大且有白框
+                    const radius = (i === currentIndex) ? 7 : 3.5;
+                    context.arc(coords[0], coords[1], radius, 0, 2 * Math.PI);
+                    
+                    context.fillStyle = (i === currentIndex) ? "#e74c3c" : "#f1c40f";
+                    context.fill();
+
+                    if (i === currentIndex) {
+                        context.strokeStyle = "#fff";
+                        context.lineWidth = 2;
+                        context.stroke();
+                    }
+                }
+            });
+        }
+
+        // 啟動動畫
+        transition();
+
+    }).catch(error => {
+        console.error("載入數據時出錯:", error);
+        d3.select(".reason").text("載入失敗！請確保 locations.json 與 index.html 在同一個目錄下，且已上傳至 GitHub Pages。");
