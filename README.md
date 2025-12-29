@@ -1,24 +1,33 @@
-# World Tour
+# World tour
 
-A minimal static itinerary site ready to publish with GitHub Pages.
+https://observablehq.com/@d3/world-tour@274
 
-## Local preview
+View this notebook in your browser by running a web server in this folder. For
+example:
 
-Open the static HTML directly in your browser:
+~~~sh
+npx http-server
+~~~
 
-```bash
-open site/index.html  # or start a simple server: python -m http.server --directory site 8000
-```
+Or, use the [Observable Runtime](https://github.com/observablehq/runtime) to
+import this module directly into your application. To npm install:
 
-## Deploying to GitHub Pages
+~~~sh
+npm install @observablehq/runtime@5
+npm install https://api.observablehq.com/d/0e9181d646defd6c@274.tgz?v=3
+~~~
 
-1. Push this branch to GitHub.
-2. In the repository settings, enable **GitHub Pages** and choose **GitHub Actions** as the source.
-3. The included workflow `.github/workflows/pages.yml` publishes the contents of `site/` to Pages on every push to the `work` branch.
-4. After the workflow completes, your site will be available at the URL shown in the deployment summary.
+Then, import your notebook and the runtime as:
 
-## Customizing
+~~~js
+import {Runtime, Inspector} from "@observablehq/runtime";
+import define from "@d3/world-tour";
+~~~
 
-- Edit `site/index.html` for the itinerary content.
-- Adjust styles in `site/styles.css`.
-- If you use a different default branch, update the `branches` list in `.github/workflows/pages.yml` to match.
+To log the value of the cell named “foo”:
+
+~~~js
+const runtime = new Runtime();
+const main = runtime.module(define);
+main.value("foo").then(value => console.log(value));
+~~~
